@@ -6,6 +6,7 @@ from tkinter import filedialog
 from PIL import Image, ImageTk
 
 class ImageSorter(tk.Tk):
+    
     def __init__(self):
         super().__init__()
         self.title("Image Sorter")
@@ -16,6 +17,9 @@ class ImageSorter(tk.Tk):
         self.img_idx = -1
         self.img_list = []
         self.bboxes = []
+        self.x = None
+        self.y = None
+        self.rectangle = None
 
         # Create buttons before loading images
         self.create_buttons()
@@ -25,8 +29,16 @@ class ImageSorter(tk.Tk):
         self.canvas = tk.Canvas(self, bg="white")
         self.canvas.pack(fill=tk.BOTH, expand=True)
 
-        self.canvas.bind("<Button-1>", self.on_left_click)
+        
+        self.canvas.bind("<ButtonPress-1>", self.on_left_click)
         self.canvas.bind("<Button-3>", self.on_right_click)
+        self.canvas.bind('<Motion>', self.mouse_move_label)
+        self.canvas.bind('<B1-Motion>', self.on_left_click_drag)
+        self.canvas.bind("<ButtonRelease-1>", self.on_left_click_release)
+        
+        self.h_line = self.canvas.create_line(0, 0, 0, self.canvas.winfo_height(), fill='gold',width=2)
+        self.v_line = self.canvas.create_line(0, 0, self.canvas.winfo_width(), 0, fill='gold',width=2)
+        
 
         self.show_next_image()
 
@@ -101,23 +113,36 @@ class ImageSorter(tk.Tk):
         self.canvas.create_image(0, 0, anchor=tk.NW, image=img)
         self.canvas.image = img
 
+    def mouse_move_label(self,event):
+        self.canvas.lift(self.h_line)
+        self.canvas.lift(self.v_line)
+        x, y = event.x, event.y
+        self.canvas.coords(self.h_line, 0, y, self.canvas.winfo_width(), y)
+        self.canvas.coords(self.v_line, x, 0, x, self.canvas.winfo_height())
+
     def on_left_click(self, event):
         if event.num == 1:  # Check if the left mouse button was clicked
-            x, y = event.x, event.y
-            if len(self.bboxes) == 0:
-                self.bboxes.append((x, y))
-            else:
-                x1, y1 = self.bboxes[0]
-                self.bboxes.append((x, y))
-                self.canvas.create_rectangle(x1, y1, x, y, outline="red", width=2)
+            self.x, self.y = event.x, event.y
+            self.rectangle = self.canvas.create_rectangle(self.x,self.y,1,1,outline='red',width=2
+            self.bboxes.append((self.x, self.y)
+    
+    def on_left_click_drag(self,event):
+        x1, y1 = event.x, event.y
+        self.canvas.coords(self.rectangle, self.x, self.y, x1, y1)
+        self.canvas.coords(self.h_line, 0, y1, self.canvas.winfo_width(), y1)
+        self.canvas.coords(self.v_line, x1, 0, x1, self.canvas.winfo_height())
 
+    def on_left_click_release(self, event):
+        x1, y1 = event.x, event.y
+        self.bboxes.append((x1,y1))
+    
+
+        
     def on_right_click(self, event):
         if event.num == 3:  # Check if the right mouse button was clicked
             x, y = event.x, event.y
-            for idx, bbox in enumerate(self.bboxes):
-                if bbox[0] - 10 <= x <= bbox[0] + 10 and bbox[1] - 10 <= y <= bbox[1] + 10:
-                    self.bboxes.pop(idx)
-                    break
+            self.bboxes = []
+            
             self.display_image()
 
     def save_and_next(self):
