@@ -87,23 +87,23 @@ class ImageSorter(tk.Tk):
         self.canvas.image = img
 
     def on_left_click(self, event):
-        x, y = event.x, event.y
-        if len(self.bboxes) == 0:
-            self.bboxes.append((x, y))
-        else:
-            x1, y1 = self.bboxes[0]
-            self.bboxes.append((x, y))
-            self.canvas.create_rectangle(x1, y1, x, y, outline="red", width=2)
+        if event.num == 1:  # Check if the left mouse button was clicked
+            x, y = event.x, event.y
+            if len(self.bboxes) == 0:
+                self.bboxes.append((x, y))
+            else:
+                x1, y1 = self.bboxes[0]
+                self.bboxes.append((x, y))
+                self.canvas.create_rectangle(x1, y1, x, y, outline="red", width=2)
 
     def on_right_click(self, event):
-        x, y = event.x, event.y
-        for idx, bbox in enumerate(self.bboxes):
-            if bbox[0] - 10 <= x <= bbox[0] + 10 and bbox[1] - 10 <= y <= bbox[1] + 10:
-                self.bboxes.pop(idx)
-                break
-        self.display_image()
-        for bbox in self.bboxes:
-            self.canvas.create_rectangle(bbox[0] - 10, bbox[1] - 10, bbox[0] + 10, bbox[1] + 10, outline="red", width=2)
+        if event.num == 3:  # Check if the right mouse button was clicked
+            x, y = event.x, event.y
+            for idx, bbox in enumerate(self.bboxes):
+                if bbox[0] - 10 <= x <= bbox[0] + 10 and bbox[1] - 10 <= y <= bbox[1] + 10:
+                    self.bboxes.pop(idx)
+                    break
+            self.display_image()
 
     def save_and_next(self):
         day_night = self.day_night_var.get()
