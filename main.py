@@ -9,13 +9,16 @@ class ImageSorter(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Image Sorter")
-        self.geometry("1920x1080")
+        self.geometry("2048x1536")
 
         self.current_img_path = None
         self.current_img = None
         self.img_idx = -1
         self.img_list = []
         self.bboxes = []
+
+        # Create buttons before loading images
+        self.create_buttons()
 
         self.load_images()
 
@@ -29,7 +32,7 @@ class ImageSorter(tk.Tk):
 
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        # Adding buttons and input box
+    def create_buttons(self):
         self.day_night_var = tk.IntVar(value=1)
         self.snow_var = tk.IntVar(value=0)
         self.object_var = tk.IntVar()
@@ -81,6 +84,18 @@ class ImageSorter(tk.Tk):
 
     def display_image(self):
         img = cv2.cvtColor(self.current_img, cv2.COLOR_BGR2RGB)
+
+        # Calculate average brightness
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        avg_brightness = cv2.mean(gray)[0]
+
+        print(avg_brightness)
+        # Set night radio button if avg_brightness is <= 15
+        if avg_brightness <= 100:
+            self.night_button.select()
+        else:
+            self.day_button.select()
+
         img = Image.fromarray(img)
         img = ImageTk.PhotoImage(img)
         self.canvas.create_image(0, 0, anchor=tk.NW, image=img)
