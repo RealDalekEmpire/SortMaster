@@ -4,13 +4,19 @@ import cv2
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
+import ctypes
+
+#https://www.youtube.com/watch?v=roz5Yaw8GB4&ab_channel=CodersLegacy
+ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
 class ImageSorter(tk.Tk):
     
     def __init__(self):
         super().__init__()
         self.title("Image Sorter")
-        self.geometry("2048x1536")
+        # self.geometry("2048x1536")
+        self.canvas_width = 2048
+        self.canvas_height = 1536        
 
         self.current_img_path = None
         self.current_img = None
@@ -26,7 +32,7 @@ class ImageSorter(tk.Tk):
 
         self.load_images()
 
-        self.canvas = tk.Canvas(self, bg="white")
+        self.canvas = tk.Canvas(self, bg="white",width=self.canvas_width, height=self.canvas_height)
         self.canvas.pack(fill=tk.BOTH, expand=True)
 
         
@@ -56,15 +62,18 @@ class ImageSorter(tk.Tk):
         self.object_button = tk.Checkbutton(self, text="Object", variable=self.object_var)
         self.obj_class_entry = tk.Entry(self, textvariable=self.obj_class_var)
 
-        self.day_button.pack(side=tk.LEFT)
-        self.night_button.pack(side=tk.LEFT)
+        self.day_button.place(x=0,y=700)
+        self.night_button.place(x=85,y=700)
         self.snow_button.pack(side=tk.LEFT)
         self.no_snow_button.pack(side=tk.LEFT)
-        self.object_button.pack(side=tk.LEFT)
-        self.obj_class_entry.pack(side=tk.LEFT)
+        self.object_button.place(x=10,y=850)
+        self.obj_class_entry.place(x=10,y=900)
 
-        self.next_button = tk.Button(self, text="Next", command=self.save_and_next)
-        self.next_button.pack(side=tk.LEFT)
+        self.next_button = tk.Button(self, text="Next", font=("Arial", 14),command=self.save_and_next)
+        self.next_button.place(x=55,y=470)
+
+        self.reset_button = tk.Button(self,text="Reset", font=("Arial", 14),command=self.reset_button)
+        self.reset_button.place(x=46,y=550)
 
     def load_images(self):
         folder_path = filedialog.askdirectory(title="Select Image Folder")
@@ -123,8 +132,16 @@ class ImageSorter(tk.Tk):
     def on_left_click(self, event):
         if event.num == 1:  # Check if the left mouse button was clicked
             self.x, self.y = event.x, event.y
-            self.rectangle = self.canvas.create_rectangle(self.x,self.y,1,1,outline='red',width=2
-            self.bboxes.append((self.x, self.y)
+            self.rectangle = self.canvas.create_rectangle(self.x,self.y,1,1,outline='red',width=2)
+            # if len(self.bboxes) ==0:
+            self.bboxes.append((self.x, self.y))
+            
+            # if len(self.bboxes) == 0:
+            #     self.bboxes.append((x, y))
+            # else:
+            #     x1, y1 = self.bboxes[0]
+            #     self.bboxes.append((x, y))
+            #     self.canvas.create_rectangle(x1, y1, x, y, outline="red", width=2)
     
     def on_left_click_drag(self,event):
         x1, y1 = event.x, event.y
@@ -141,9 +158,17 @@ class ImageSorter(tk.Tk):
     def on_right_click(self, event):
         if event.num == 3:  # Check if the right mouse button was clicked
             x, y = event.x, event.y
+            # for idx, bbox in enumerate(self.bboxes):
+            #     if bbox[0] - 10 <= x <= bbox[0] + 10 and bbox[1] - 10 <= y <= bbox[1] + 10:
+            #         self.bboxes.pop(idx)
+            #         break
             self.bboxes = []
             
             self.display_image()
+
+    def reset_button(self):
+        self.bboxes = []
+        self.display_image()
 
     def save_and_next(self):
         day_night = self.day_night_var.get()
