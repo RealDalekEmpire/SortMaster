@@ -91,7 +91,8 @@ class ImageSorter(tk.Tk):
             data = self.saved_data()
             for row in data:
                 if row[0] in self.img_list:
-                    self.img_list.remove(row[0])
+                    # self.img_list.remove(row[0])
+                    self.img_idx += 1
 
                     
     def save_progress(self, data):
@@ -227,5 +228,3 @@ class ImageSorter(tk.Tk):
 if __name__ == "__main__":
     app = ImageSorter()
     app.mainloop()
-    
-
