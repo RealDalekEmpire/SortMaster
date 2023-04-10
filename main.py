@@ -227,3 +227,5 @@ class ImageSorter(tk.Tk):
 if __name__ == "__main__":
     app = ImageSorter()
     app.mainloop()
+    
+
