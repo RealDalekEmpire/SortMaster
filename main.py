@@ -3,6 +3,7 @@ import csv
 import cv2
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
 from PIL import Image, ImageTk
 import ctypes
 
@@ -23,9 +24,12 @@ class ImageSorter(tk.Tk):
         self.img_idx = -1
         self.img_list = []
         self.bboxes = []
+        self.object = []
         self.value = 0
         self.x = None
         self.y = None
+        self.x1 = None
+        self.y1 = None
         self.rectangle = None
 
         # Create buttons before loading images
@@ -43,6 +47,7 @@ class ImageSorter(tk.Tk):
         self.canvas.bind('<B1-Motion>', self.on_left_click_drag)
         self.canvas.bind("<ButtonRelease-1>", self.on_left_click_release)
         
+        
         self.h_line = self.canvas.create_line(0, 0, 0, self.canvas.winfo_height(), fill='gold',width=2)
         self.v_line = self.canvas.create_line(0, 0, self.canvas.winfo_width(), 0, fill='gold',width=2)
         
@@ -56,21 +61,33 @@ class ImageSorter(tk.Tk):
         self.day_night_var = tk.IntVar(value=1)
         self.snow_var = tk.IntVar(value=0)
         self.object_var = tk.IntVar()
-        self.obj_class_var = tk.StringVar()
         self.day_button = tk.Radiobutton(self, text="Day", variable=self.day_night_var, value=1)
         self.night_button = tk.Radiobutton(self, text="Night", variable=self.day_night_var, value=0)
         self.snow_button = tk.Radiobutton(self, text="Snow", variable=self.snow_var, value=1)
         self.no_snow_button = tk.Radiobutton(self, text="No Snow", variable=self.snow_var, value=0)
         self.object_button = tk.Checkbutton(self, text="Object", variable=self.object_var)
-        self.obj_class_entry = tk.Entry(self, textvariable=self.obj_class_var)
         self.prev_button = tk.Button(self, text="Prev", font=("Arial", 14), command=self.show_prev_image)
+        
 
+        self.selected_label = tk.StringVar()
+        self.popup_menu = tk.Menu(self, tearoff=0)
+        self.popup_menu.add_command(label="bird",command=lambda:self.show_selected_value("bird"))
+        self.popup_menu.add_command(label="cat",command=lambda:self.show_selected_value("cat"))
+        self.popup_menu.add_command(label="human",command=lambda:self.show_selected_value("human"))
+        self.popup_menu.add_command(label="deer",command=lambda:self.show_selected_value("deer"))
+        self.popup_menu.add_command(label="bear",command=lambda:self.show_selected_value("bear"))
+        self.popup_menu.add_command(label="dog",command=lambda:self.show_selected_value("dog"))
+        self.popup_menu.add_command(label="cayote",command=lambda:self.show_selected_value("Cayote"))
+        self.popup_menu.add_command(label="squirrel",command=lambda:self.show_selected_value("squirrel"))
+        self.popup_menu.add_command(label="rabbit",command=lambda:self.show_selected_value("rabbit"))
+
+
+        
         self.day_button.place(x=0,y=700)
         self.night_button.place(x=85,y=700)
         self.snow_button.pack(side=tk.LEFT)
         self.no_snow_button.pack(side=tk.LEFT)
         self.object_button.place(x=10,y=850)
-        self.obj_class_entry.place(x=10,y=900)
         self.prev_button.place(x=55, y=370)
 
         self.next_button = tk.Button(self, text="Next", font=("Arial", 14),command=self.save_and_next)
@@ -78,6 +95,13 @@ class ImageSorter(tk.Tk):
 
         self.reset_button = tk.Button(self,text="Reset", font=("Arial", 14),command=self.reset_button)
         self.reset_button.place(x=46,y=550)
+
+        self.menu_item_var = tk.StringVar()
+        self.menu_item_entry = tk.Entry(self, textvariable=self.menu_item_var)
+        self.menu_item_entry.place(x=10,y=1000)
+
+        self.add_menu_item_button = tk.Button(self, text="Add menu item", command=self.add_menu_item)
+        self.add_menu_item_button.place(x=10,y=1100)
 
     
     def load_images(self):
@@ -120,7 +144,7 @@ class ImageSorter(tk.Tk):
 
         print(avg_brightness)
         # Set night radio button if avg_brightness is <= 15
-        if avg_brightness <= 100:
+        if avg_brightness <= 106:
             self.night_button.select()
         else:
             self.day_button.select()
@@ -147,18 +171,20 @@ class ImageSorter(tk.Tk):
     
     
     def on_left_click_drag(self,event):
-        x1, y1 = event.x, event.y
-        self.canvas.coords(self.rectangle, self.x, self.y, x1, y1)
-        self.canvas.coords(self.h_line, 0, y1, self.canvas.winfo_width(), y1)
-        self.canvas.coords(self.v_line, x1, 0, x1, self.canvas.winfo_height())
+        self.x1, self.y1 = event.x, event.y
+        self.canvas.coords(self.rectangle, self.x, self.y, self.x1, self.y1)
+        self.canvas.coords(self.h_line, 0, self.y1, self.canvas.winfo_width(), self.y1)
+        self.canvas.coords(self.v_line, self.x1, 0, self.x1, self.canvas.winfo_height())
+        
 
     
     def on_left_click_release(self, event):
         x1, y1 = event.x, event.y
         self.bboxes.append((x1,y1))
+        self.show_popup_menu(x1, y1)
         self.object_var.set(1)
         
-    
+        
     def on_right_click(self, event):
         if event.num == 3:  # Check if the right mouse button was clicked
             x, y = event.x, event.y
@@ -193,7 +219,24 @@ class ImageSorter(tk.Tk):
         else:
             self.img_idx = -1
 
-    
+# for pop up menu
+    def add_menu_item(self):
+        item_name = self.menu_item_var.get()
+        if item_name:
+            self.popup_menu.add_command(label=item_name,command=lambda:self.show_selected_value(item_name))
+
+    def show_popup_menu(self,x1,y1):
+        x1 = self.canvas.winfo_rootx() + x1
+        y1 = self.canvas.winfo_rooty() + y1
+        self.popup_menu.post(x1, y1)
+
+    def show_selected_value(self, label):
+        self.selected_label.set(label)
+        catagory = label
+        self.object.append(catagory)
+# --------------------        
+
+
     def saved_data(self):
         changes = []
         with open("progress.csv",'r') as f:
@@ -211,15 +254,21 @@ class ImageSorter(tk.Tk):
         day_night = self.day_night_var.get()
         snow = self.snow_var.get()
         obj = self.object_var.get()
-        obj_class = self.obj_class_var.get()
+        object = ', '.join(str(x) for x in self.object)
+        if len(self.bboxes)/2 != len(self.object):
+            messagebox.showerror("Error", "format error,please reset the current picture")
+            self.bboxes = []
+            self.object = []
+            self.object_var.set(0)
+        else:
 
-        data = [self.current_img_path, day_night, snow, obj, obj_class] + self.bboxes
-        self.save_progress(data)
+            data = [self.current_img_path, day_night, snow, obj, object] + self.bboxes
+            self.save_progress(data)
 
-        self.bboxes = []
-        self.object_var.set(0)  # Clear object variable
-        self.obj_class_var.set("")  # Clear objClass variable
-        self.show_next_image()
+            self.bboxes = []
+            self.object = []
+            self.object_var.set(0)  # Clear object variable
+            self.show_next_image()
 
     
     def on_closing(self):
