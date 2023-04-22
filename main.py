@@ -77,7 +77,7 @@ class ImageSorter(tk.Tk):
         self.popup_menu.add_command(label="deer",command=lambda:self.show_selected_value("deer"))
         self.popup_menu.add_command(label="bear",command=lambda:self.show_selected_value("bear"))
         self.popup_menu.add_command(label="dog",command=lambda:self.show_selected_value("dog"))
-        self.popup_menu.add_command(label="cayote",command=lambda:self.show_selected_value("Cayote"))
+        self.popup_menu.add_command(label="coyote",command=lambda:self.show_selected_value("coyote"))
         self.popup_menu.add_command(label="squirrel",command=lambda:self.show_selected_value("squirrel"))
         self.popup_menu.add_command(label="rabbit",command=lambda:self.show_selected_value("rabbit"))
 
